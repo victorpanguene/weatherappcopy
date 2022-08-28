@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MainCard from './components/MainCard/MainCard';
 import InfoCard from './components/MainCard/InfoCard';
 import * as Location from 'expo-location';
-import { useEffect } from 'react';
+import getCurrentWeather from './api/ConsultApi';
 
 const App = () => {
   const [darkTheme, setDarkTheme] = useState(true);
-  const [currentTemperature, setCurrentTemperature] = useState(40);
+  const [currentTemperature, setCurrentTemperature] = useState('12');
   const [location, setLocation] = useState('Maputo');
   const [currentHour, setCurrentHour] = useState('14:54 AM');
 
@@ -17,7 +17,7 @@ const App = () => {
   const [minTemp, setMinTemp] = useState(15);
   const [maxTemp, setMaxTemp] = useState(28);
 
-  const [locationCoords, setLocationCoords] = useState({});
+  const [locationCoords, setLocationCoords] = useState();
 
   const setTheme = () => (darkTheme ? setDarkTheme(false) : setDarkTheme(true));
 
@@ -41,7 +41,7 @@ const App = () => {
     },
     temperatureValue: {
       color: darkTheme ? '#E0E0E0' : '#000000',
-      fontSize: 40,
+      fontSize: 20,
     },
     cardView: {
       display: 'flex',
@@ -97,12 +97,29 @@ const App = () => {
       height: 20,
       borderRadius: 50,
     },
-    setThemeInfoCard: {
-      backgroundColor: darkTheme ? '#242635' : 'red',
-    },
   });
 
   /* === API CCONSUMING === */
+  const setCurrentWeather = async function () {
+    await getCurrentLocation();
+
+    const data = await getCurrentWeather(locationCoords);
+
+    let date = new Date();
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    setCurrentHour(`${hours}:${minutes}`);
+
+    // locationName, temperatureMin, temperatureMax, windSpeed, humidity, currentTemperature
+    setCurrentTemperature(toKelvin(data[0]));
+    setMinTemp(toKelvin(data[1]));
+    setMaxTemp(toKelvin(data[2]));
+    setLocation(data[3]);
+    setWind(data[4]);
+    setHumidity(data[5]);
+    console.log(`Show ${data}`);
+  };
+
   const getCurrentLocation = async function () {
     let { status } = await Location.requestBackgroundPermissionsAsync();
     if (status !== 'granted') {
@@ -110,17 +127,23 @@ const App = () => {
     } else {
       let location = await Location.getCurrentPositionAsync({});
       await setLocationCoords(location.coords);
-      console.log(location.coords);
     }
   };
 
+  const toKelvin = (kelvin) => {
+    return parseInt(kelvin - 273);
+  };
+
   useEffect(() => {
-    getCurrentLocation();
+    setCurrentWeather();
   }, []);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.refreshButton}>
+      <TouchableOpacity
+        style={styles.refreshButton}
+        onPress={() => setCurrentWeather()}
+      >
         <Ionicons
           name="ios-refresh"
           size={24}
@@ -137,7 +160,7 @@ const App = () => {
       />
       <View style={styles.temperature}>
         <Text style={styles.temperatureValue}> {currentTemperature} </Text>
-        <Text style={[styles.temperatureValue, { fontSize: 20 }]}> ºC </Text>
+        <Text style={[styles.temperatureValue, { fontSize: 14 }]}>°C</Text>
       </View>
 
       <Text
