@@ -45,7 +45,7 @@ const MainCard = (props) => {
       margin: 10,
       height: 'auto',
       padding: 20,
-      width: '20%',
+      width: '25%',
     },
     cardIcon: {
       marginTop: 55,

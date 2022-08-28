@@ -3,11 +3,23 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MainCard from './components/MainCard/MainCard';
 import InfoCard from './components/MainCard/InfoCard';
+import * as Location from 'expo-location';
+import { useEffect } from 'react';
 
 const App = () => {
   const [darkTheme, setDarkTheme] = useState(true);
   const [currentTemperature, setCurrentTemperature] = useState(40);
   const [location, setLocation] = useState('Maputo');
+  const [currentHour, setCurrentHour] = useState('14:54 AM');
+
+  const [wind, setWind] = useState(60);
+  const [humidity, setHumidity] = useState('50');
+  const [minTemp, setMinTemp] = useState(15);
+  const [maxTemp, setMaxTemp] = useState(28);
+
+  const [locationCoords, setLocationCoords] = useState({});
+
+  const setTheme = () => (darkTheme ? setDarkTheme(false) : setDarkTheme(true));
 
   /* === STYLES === */
   const styles = StyleSheet.create({
@@ -38,7 +50,7 @@ const App = () => {
       color: darkTheme ? 'white' : 'black',
     },
     info: {
-      marginTop: '5%',
+      marginTop: '3%',
       alignItems: 'center',
       backgroundColor: darkTheme ? '#383E55' : 'white',
       padding: 20,
@@ -47,16 +59,64 @@ const App = () => {
       height: 'auto',
     },
     infoText: {
-      color: darkTheme ? '#E0E0E0' : 'white',
-      fontSize: 20,
+      color: darkTheme ? '#E0E0E0' : 'black',
+      fontSize: 18,
       fontWeight: 'bold',
+      marginBottom: 5,
+      textTransform: 'uppercase',
     },
     infoCards: {
       justifyContent: 'center',
       flexDirection: 'row',
       flexWrap: 'wrap',
     },
+    themeButton: {
+      margin: 10,
+      marginLeft: 300,
+
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+    },
+    squareButton: {
+      backgroundColor: darkTheme ? '#F2F2F2' : '#8F8F8F',
+      justifyContent: 'center',
+      borderRadius: 20,
+      marginRight: 20,
+      width: 50,
+      height: 25,
+    },
+    circleButton: {
+      backgroundColor: darkTheme ? '#232634' : '#F2F2F2',
+      alignSelf: darkTheme ? 'flex-end' : 'flex-start',
+      justifyContent: 'center',
+      margin: 5,
+      width: 20,
+      height: 20,
+      borderRadius: 50,
+    },
+    setThemeInfoCard: {
+      backgroundColor: darkTheme ? '#242635' : 'red',
+    },
   });
+
+  /* === API CCONSUMING === */
+  const getCurrentLocation = async function () {
+    let { status } = await Location.requestBackgroundPermissionsAsync();
+    if (status !== 'granted') {
+      setErrorMsg(`Sem premissão, ${status}`);
+    } else {
+      let location = await Location.getCurrentPositionAsync({});
+      await setLocationCoords(location.coords);
+      console.log(location.coords);
+    }
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -79,6 +139,16 @@ const App = () => {
         <Text style={styles.temperatureValue}> {currentTemperature} </Text>
         <Text style={[styles.temperatureValue, { fontSize: 20 }]}> ºC </Text>
       </View>
+
+      <Text
+        style={[
+          styles.temperatureText,
+          { fontSize: 14 },
+          { color: darkTheme ? 'white' : '#000000' },
+        ]}
+      >
+        {location}, {currentHour}
+      </Text>
 
       <View style={styles.cardView}>
         <MainCard
@@ -104,10 +174,16 @@ const App = () => {
       <View style={styles.info}>
         <Text style={styles.infoText}>Informação adicional</Text>
         <View style={styles.infoCards}>
-          <InfoCard title={'Vento'} value={'45 Km/h'} />
-          <InfoCard title={'Vento'} value={'45 Km/h'} />
-          <InfoCard title={'Vento'} value={'45 Km/h'} />
-          <InfoCard title={'Vento'} value={'45 Km/h'} />
+          <InfoCard title={'Vento'} value={wind + ' Km/H'} />
+          <InfoCard title={'Humidade'} value={humidity + ' %'} />
+          <InfoCard title={'Temp Max'} value={maxTemp + 'ºC'} />
+          <InfoCard title={'Temp Min'} value={minTemp + 'ºC'} />
+        </View>
+      </View>
+
+      <View style={styles.themeButton}>
+        <View style={styles.squareButton}>
+          <TouchableOpacity style={styles.circleButton} onPress={setTheme} />
         </View>
       </View>
     </View>
