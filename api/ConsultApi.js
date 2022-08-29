@@ -29,7 +29,6 @@ const getCurrentWeather = async function (locationCoords) {
         windSpeed,
         humidity,
       ];
-      console.log(...result);
     })
     .catch((err) => {
       console.log(`Erro econtrado1: ${err}`);
